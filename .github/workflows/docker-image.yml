@@ -1,0 +1,38 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  init_test:
+    runs-on: self-hosted
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '21'
+    - name: run tests
+      run: | 
+        echo "corriendo test"
+        npm install
+        npm test
+    - name: version
+      id: get_version
+      run: |
+        VERSION=$(jq -r .version package.json)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  build:
+
+    runs-on: self-hosted
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
